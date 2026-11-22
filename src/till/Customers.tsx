@@ -50,8 +50,10 @@ export default function Customers() {
         <div className="space-y-3 border-b border-line p-4">
           <div className="flex gap-2">
             <SearchBox value={q} onChange={setQ} placeholder="Name, phone or email" className="flex-1" />
-            <Button aria-label="New customer" onClick={() => setAdding(true)}>
+            <Button aria-label="New customer" onClick={() => setAdding(true)} className="shrink-0 gap-1.5 px-3">
               <UserPlus size={17} />
+              <span className="hidden sm:inline">New customer</span>
+              <span className="sm:hidden">New</span>
             </Button>
           </div>
           <Segmented size="sm" value={tier} onChange={setTier} options={[{ value: "all", label: `All (${customers.length})` }, { value: "vip", label: "Gold & Signature" }]} />

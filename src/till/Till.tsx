@@ -7,6 +7,7 @@ import { fromKobo } from "../api/money";
 import { uid, useDb, useTill } from "../data/store";
 import { naira } from "../lib/pricing";
 import { Avatar, Badge, Button, Input, Toaster, cx, toast } from "../ui/kit";
+import { writeAdminStaff } from "../admin/AdminGate";
 import { ApprovalHost, can, PinPad, useMe, useRegister } from "./common";
 import Sell from "./Sell";
 import Orders from "./Orders";
@@ -15,6 +16,11 @@ import Customers from "./Customers";
 import Stock from "./Stock";
 import RegisterScreen from "./Register";
 import Services from "./Services";
+
+/** Seed demo register ids (r1–r4) must never be sent to the live PIN API. */
+function isSeedRegisterId(id: string | null | undefined) {
+  return !!id && /^r\d+$/i.test(id);
+}
 
 export type TillScreen = "sell" | "orders" | "pickups" | "services" | "customers" | "stock" | "register";
 export const useScreen = () => {
@@ -34,6 +40,17 @@ export default function Till() {
   useSync();
   useEffect(() => {
     document.title = "ASL ORIGINALS POS";
+  }, []);
+  useEffect(() => {
+    if (!liveMode()) return;
+    const id = useTill.getState().registerId;
+    if (!isSeedRegisterId(id)) return;
+    const saved = localStorage.getItem("asl-pos-register");
+    if (saved && !isSeedRegisterId(saved)) {
+      useTill.getState().set({ registerId: saved });
+      return;
+    }
+    localStorage.removeItem("asl-pos-register");
   }, []);
 
   let body: ReactNode;
@@ -144,12 +161,19 @@ function LockScreen() {
     if (live) {
       setBusy(true);
       try {
-        const out = await posApi.pinLogin(next, registerId);
+        // Never send seed demo ids (r1…) — omit and bind a live register after hydrate.
+        const liveRegId = isSeedRegisterId(registerId) ? undefined : registerId;
+        const out = await posApi.pinLogin(next, liveRegId);
         const staffRow = toStaff(out.staff);
         useDb.setState({ staff: [staffRow, ...useDb.getState().staff.filter((s) => s.id !== staffRow.id)] });
-        const boot = await hydrateFromApi(registerId);
+        if (staffRow.role !== "Cashier") writeAdminStaff(staffRow);
+        const boot = await hydrateFromApi(liveRegId ?? out.registerId ?? undefined);
         const sid = boot?.openSessionId ?? null;
-        set({ staffId: staffRow.id, sessionId: sid, registerId: boot?.registerId ?? registerId });
+        const boundReg = boot?.registerId ?? out.registerId ?? liveRegId ?? registerId;
+        if (boundReg && !isSeedRegisterId(boundReg)) {
+          localStorage.setItem("asl-pos-register", boundReg);
+        }
+        set({ staffId: staffRow.id, sessionId: sid, registerId: boundReg });
         toast(`Welcome, ${staffRow.name.split(" ")[0]}`);
       } catch (e) {
         setError(e instanceof ApiError ? e.message : "That PIN isn't right.");
@@ -207,25 +231,30 @@ function LockScreen() {
             </Badge>
             <Badge tone="neutral">{reg.device || (live ? "Live API" : "Demo")}</Badge>
           </div>
-          {live && registers.length > 1 && (
-            <label className="mt-6 block text-[13px] text-muted">
-              Till
-              <select
-                className="mt-1 h-10 w-full rounded-lg border border-line bg-white px-3 text-ink"
-                value={registerId}
-                onChange={(e) => {
-                  localStorage.setItem("asl-pos-register", e.target.value);
-                  set({ registerId: e.target.value });
-                }}
-              >
-                {registers.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
+          {live && (() => {
+            const liveRegs = registers.filter((r) => !isSeedRegisterId(r.id));
+            if (liveRegs.length <= 1) return null;
+            const selectValue = liveRegs.some((r) => r.id === registerId) ? registerId : liveRegs[0]!.id;
+            return (
+              <label className="mt-6 block text-[13px] text-muted">
+                Till
+                <select
+                  className="mt-1 h-10 w-full rounded-lg border border-line bg-white px-3 text-ink"
+                  value={selectValue}
+                  onChange={(e) => {
+                    localStorage.setItem("asl-pos-register", e.target.value);
+                    set({ registerId: e.target.value });
+                  }}
+                >
+                  {liveRegs.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            );
+          })()}
         </div>
         <a href="#pos-overview" className="inline-flex items-center gap-2 text-[13px] font-medium text-muted hover:text-ink">
           <MonitorCog size={16} />

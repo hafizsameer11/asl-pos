@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { ApiError, clearTokens, getAccessToken, liveMode } from "../api/client";
+import { ApiError, getAccessToken, liveMode } from "../api/client";
 import { posApi, toStaff } from "../api/pos";
 import { useDb } from "../data/store";
 import type { Staff } from "../data/types";
@@ -17,7 +17,7 @@ export function readAdminStaff(): Staff | null {
   }
 }
 
-function writeAdminStaff(s: Staff | null) {
+export function writeAdminStaff(s: Staff | null) {
   if (!s) sessionStorage.removeItem(ADMIN_STAFF_KEY);
   else sessionStorage.setItem(ADMIN_STAFF_KEY, JSON.stringify(s));
 }
@@ -43,13 +43,24 @@ export default function AdminGate({ children }: { children: (staff: Staff, signO
       .then((me) => {
         if (cancelled) return;
         const row = toStaff(me);
+        // Till PIN may have replaced the JWT with a cashier — keep till tokens, require admin PIN.
+        if (row.role === "Cashier") {
+          writeAdminStaff(null);
+          setStaff(null);
+          return;
+        }
         setStaff(row);
         writeAdminStaff(row);
         useDb.setState({ staff: [row, ...useDb.getState().staff.filter((s) => s.id !== row.id)] });
       })
       .catch(() => {
         if (cancelled) return;
-        clearTokens();
+        // Do not clear till tokens — opening admin after a till session must not wipe the register.
+        const snap = readAdminStaff();
+        if (snap && snap.role !== "Cashier") {
+          setStaff(snap);
+          return;
+        }
         writeAdminStaff(null);
         setStaff(null);
       })
