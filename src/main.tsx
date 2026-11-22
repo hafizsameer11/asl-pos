@@ -22,12 +22,16 @@ function useHash() {
 function App() {
   const hash = useHash();
   // Plain hash names (#pos-receipts, #admin-orders, #till) so links survive being shared.
-  if (hash.startsWith("#pos") || hash.startsWith("#admin-")) {
-    const section = hash.startsWith("#pos") ? "pos" : hash.slice(7);
-    const page = hash.startsWith("#pos") ? hash.slice(5) || "overview" : "";
+  if (hash.startsWith("#admin")) {
+    // Legacy prototype links (#admin-orders, etc.) — POS admin only has #pos-* pages.
+    if (hash !== "#pos-overview") location.replace(`${location.pathname}${location.search}#pos-overview`);
+    return null;
+  }
+  if (hash.startsWith("#pos")) {
+    const page = hash.slice(5) || "overview";
     return (
       <AdminGate>
-        {(staff, signOut) => <Admin section={section} page={page} staff={staff} onSignOut={signOut} />}
+        {(staff, signOut) => <Admin page={page} staff={staff} onSignOut={signOut} />}
       </AdminGate>
     );
   }
