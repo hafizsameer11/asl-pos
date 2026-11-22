@@ -304,8 +304,10 @@ export function CheckoutPage() {
 export function ReceiptsPage() {
   const [r, set] = useGroup("receipts");
   const db = useDb();
-  const sample: Order = db.orders.find((o) => o.channel === "pos" && o.customerId && o.lines.length > 1) ?? db.orders[0];
-  const preview = { ...sample, pointsEarned: sample.pointsEarned || 120, staffId: sample.staffId ?? "s3" };
+  const sample = db.orders.find((o) => o.channel === "pos" && o.customerId && o.lines.length > 1) ?? db.orders[0];
+  const preview = sample
+    ? { ...sample, pointsEarned: sample.pointsEarned || 120, staffId: sample.staffId ?? "s3" }
+    : null;
   return (
     <>
       <PageHead title="Receipts" sub="What goes on printed and digital receipts. The preview updates as you change things." actions={<SavedNote />} />
@@ -340,7 +342,11 @@ export function ReceiptsPage() {
         <div className="lg:sticky lg:top-4 lg:self-start">
           <p className="mb-2 text-[13px] font-medium text-muted">Preview</p>
           <div className="rounded-xl bg-[#ece9e3] p-5">
-            <Receipt order={preview} className="shadow-card" />
+            {preview ? (
+              <Receipt order={preview} className="shadow-card" />
+            ) : (
+              <p className="rounded-lg bg-white p-6 text-sm text-muted shadow-card">Complete a till sale to preview a receipt here.</p>
+            )}
           </div>
         </div>
       </div>

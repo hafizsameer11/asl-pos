@@ -136,6 +136,7 @@ export const posApi = {
     api<SaleResult>("/sales", {
       method: "POST",
       body: posApi.completeSaleBody(cart, payments, changeNaira, opts),
+      idempotencyKey: opts.clientKey && opts.clientKey.length >= 8 ? opts.clientKey : `sale-${crypto.randomUUID()}`,
     }).then(mapSale),
 
   syncSales: (sales: unknown[]) => api("/sales/sync", { method: "POST", body: { sales } }),

@@ -47,6 +47,8 @@ type Opts = {
   /** Use admin POS prefix instead of till prefix */
   admin?: boolean;
   auth?: boolean;
+  /** Required by mutating POS/checkout routes that opt into idempotency */
+  idempotencyKey?: string;
 };
 
 function qs(query?: Opts["query"]) {
@@ -70,6 +72,7 @@ export async function api<T = unknown>(path: string, opts: Opts = {}): Promise<T
   }
   const reg = opts.registerId ?? localStorage.getItem("asl-pos-register");
   if (reg) headers["X-Pos-Register"] = reg;
+  if (opts.idempotencyKey) headers["Idempotency-Key"] = opts.idempotencyKey;
 
   const res = await fetch(`${base}${path}${qs(opts.query)}`, {
     method: opts.method ?? (opts.body !== undefined ? "POST" : "GET"),
