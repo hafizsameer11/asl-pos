@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-canvas font-sans text-[14px] text-ink antialiased;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.thin-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: #dcd9d2;
+  border-radius: 8px;
+}
+
+.side-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #3a3a36 transparent;
+}
+.side-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.side-scroll::-webkit-scrollbar-thumb {
+  background: #3a3a36;
+  border-radius: 6px;
+}
+
+:focus-visible {
+  outline: 2px solid #c4561c;
+  outline-offset: 2px;
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes slide-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.anim-rise {
+  animation: rise 0.18s ease-out;
+}
+.anim-slide {
+  animation: slide-in 0.2s ease-out;
+}
+
+/* Prints only the receipt, sized for a thermal roll. */
+@media print {
+  @page {
+    margin: 4mm;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: fixed;
+    inset: 0 auto auto 0;
+    width: 72mm;
+    box-shadow: none !important;
+    border: 0 !important;
+  }
+}
