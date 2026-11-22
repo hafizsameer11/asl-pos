@@ -126,9 +126,9 @@ export default function Admin({
   );
 
   return (
-    <div className="flex h-full bg-canvas">
-      <aside className="hidden w-[248px] shrink-0 lg:block">{nav}</aside>
-      <div className="flex min-w-0 flex-1 flex-col">
+    <div className="flex h-dvh max-h-dvh overflow-hidden bg-canvas">
+      <aside className="hidden h-full w-[248px] shrink-0 self-stretch lg:flex lg:flex-col">{nav}</aside>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line bg-white px-4 lg:px-6">
           <button className="lg:hidden" aria-label="Menu" onClick={() => setMobileNav(true)}>
             <Menu size={22} />
@@ -139,10 +139,10 @@ export default function Admin({
             <AdminUserChip staff={staff} onSignOut={onSignOut} />
           </div>
         </header>
-        <div className="flex min-h-0 flex-1">
+        <div className="flex min-h-0 flex-1 overflow-hidden">
           {mobileNav && (
             <div className="fixed inset-0 z-40 bg-ink/40 lg:hidden" onClick={() => setMobileNav(false)}>
-              <aside className="anim-slide relative h-full w-[280px]" onClick={(e) => e.stopPropagation()}>
+              <aside className="anim-slide relative flex h-full w-[280px] flex-col" onClick={(e) => e.stopPropagation()}>
                 <button aria-label="Close menu" onClick={() => setMobileNav(false)} className="absolute right-2 top-3 z-10 p-2 text-white/70">
                   <X size={20} />
                 </button>
@@ -150,8 +150,8 @@ export default function Admin({
               </aside>
             </div>
           )}
-          <main ref={main} className="thin-scroll min-w-0 flex-1 overflow-y-auto">
-            <div className="mx-auto max-w-[1400px] p-4 lg:p-6">{current.render()}</div>
+          <main ref={main} className="thin-scroll min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain">
+            <div className="mx-auto max-w-[1400px] p-4 pb-8 lg:p-6 lg:pb-10">{current.render()}</div>
           </main>
         </div>
       </div>
