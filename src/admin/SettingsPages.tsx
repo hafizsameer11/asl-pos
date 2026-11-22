@@ -5,7 +5,7 @@ import { fromKobo } from "../api/money";
 import { adminPosApi } from "../api/pos";
 import { applyPosSettingsToLocal, localPatchToPosApi } from "../api/posSettingsMap";
 import { useDb } from "../data/store";
-import type { Coupon, Order, Settings, Tier } from "../data/types";
+import type { Coupon, Settings, Tier } from "../data/types";
 import { naira } from "../lib/pricing";
 import { Badge, Button, Input, Segmented, Select, Toggle, cx, toast, timeAgo, TierBadge } from "../ui/kit";
 import { Receipt } from "../shared/Receipt";
