@@ -283,6 +283,10 @@ export async function completeSale(payments: Payment[], change: number, refundMe
       note: cart.note,
     };
     const syncPayload = clientKey ? posApi.completeSaleBody(cart, payments, change, saleOpts) : undefined;
+    // Simulated or real offline: queue locally — do not call the API until reconnect sync.
+    if (till.offline) {
+      pendingOfflineSync = syncPayload;
+    } else {
     try {
       const sale = await posApi.completeSale(cart, payments, change, saleOpts);
       const order: Order = {
@@ -354,11 +358,14 @@ export async function completeSale(payments: Payment[], change: number, refundMe
       useTill.setState({ cart: emptyCart() });
       return { order, giftCodes: [] };
     } catch (e) {
-      if (till.offline && (e instanceof TypeError || (e instanceof ApiError && e.status >= 500))) {
-        pendingOfflineSync = syncPayload;
+      // Unexpected disconnect mid-sale — keep a payload so reconnect can sync.
+      if (e instanceof TypeError || (e instanceof ApiError && e.status >= 500)) {
+        pendingOfflineSync = syncPayload ?? posApi.completeSaleBody(cart, payments, change, saleOpts);
+        useTill.setState({ offline: true });
       } else {
         throw e;
       }
+    }
     }
   }
 

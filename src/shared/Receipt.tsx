@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import QRCode from "qrcode";
 import { useDb } from "../data/store";
 import type { Order, ReturnRec, Settings, Store } from "../data/types";
 import { naira } from "../lib/pricing";
@@ -7,16 +9,43 @@ export const METHOD: Record<string, string> = { cash: "Cash", card: "Card", tran
 /** For use mid-sentence: "by card", "to ASL Wallet". */
 export const methodText = (m: string) => (m === "wallet" ? "ASL Wallet" : (METHOD[m] ?? m).toLowerCase());
 
-function QR() {
-  // A stand-in pattern; the real receipt would encode the order link.
-  const cells = Array.from({ length: 121 }, (_, i) => ((i * 7919) % 13) % 3 === 0 || [0, 1, 2, 10, 11, 12, 22, 23, 24, 96, 97, 98, 108, 109, 110, 118, 119, 120, 8, 9, 19, 20, 30, 31].includes(i));
-  return (
-    <div className="mx-auto grid h-16 w-16 grid-cols-11">
-      {cells.map((on, i) => (
-        <span key={i} className={on ? "bg-ink" : ""} />
-      ))}
-    </div>
-  );
+function webBase() {
+  return (import.meta.env.VITE_WEB_BASE as string | undefined)?.replace(/\/$/, "") || "https://asl.hmstech.org";
+}
+
+/** Stable payload scanners can resolve: storefront order page, else order number for till lookup. */
+export function receiptQrPayload(order: Order) {
+  if (order.id) return `${webBase()}/account/orders/${order.id}`;
+  return `ASL:${order.number}`;
+}
+
+function OrderQR({ order }: { order: Order }) {
+  const [src, setSrc] = useState<string | null>(null);
+  const payload = receiptQrPayload(order);
+
+  useEffect(() => {
+    let alive = true;
+    QRCode.toDataURL(payload, {
+      errorCorrectionLevel: "M",
+      margin: 1,
+      width: 160,
+      color: { dark: "#0a0a0a", light: "#ffffff" },
+    })
+      .then((url) => {
+        if (alive) setSrc(url);
+      })
+      .catch(() => {
+        if (alive) setSrc(null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [payload]);
+
+  if (!src) {
+    return <p className="text-center text-[10px] text-muted font-mono">{order.number}</p>;
+  }
+  return <img src={src} alt={`QR code for ${order.number}`} width={64} height={64} className="mx-auto h-16 w-16" />;
 }
 
 export function Receipt({ order, settings, store, gift, className }: { order: Order; settings?: Settings; store?: Store; gift?: boolean; className?: string }) {
@@ -117,8 +146,9 @@ export function Receipt({ order, settings, store, gift, className }: { order: Or
       )}
       {r.showQr && (
         <div className="mt-3">
-          <QR />
+          <OrderQR order={order} />
           <p className="mt-1 text-center text-[10px] text-muted">Scan to view or return this order</p>
+          <p className="text-center text-[9px] font-mono text-faint">{order.number}</p>
         </div>
       )}
       {r.footer && <p className="mt-3 text-center font-sans text-[11px]">{r.footer}</p>}
