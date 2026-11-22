@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from "react";
-import { Boxes, Cloud, CloudOff, LayoutGrid, Lock, LogOut, MonitorCog, PackageCheck, ReceiptText, RefreshCw, Scissors, Users, Wallet, Wifi, WifiOff } from "lucide-react";
+import { Boxes, Cloud, CloudOff, LayoutGrid, Lock, LogOut, MonitorCog, PackageCheck, ReceiptText, RefreshCw, Scissors, Users, Wallet } from "lucide-react";
 import { ApiError, liveMode } from "../api/client";
 import { hydrateFromApi } from "../api/hydrate";
 import { posApi, toStaff } from "../api/pos";
@@ -476,16 +476,6 @@ function Shell() {
                       }}
                     >
                       Lock and switch staff
-                    </MenuItem>
-                    <MenuItem
-                      icon={offline ? <Wifi size={16} /> : <WifiOff size={16} />}
-                      onClick={() => {
-                        useTill.setState({ offline: !offline });
-                        setMenu(false);
-                        toast(offline ? "Reconnecting…" : "Offline mode on. Sales are kept on this till.", "info");
-                      }}
-                    >
-                      {offline ? "Go back online" : "Simulate going offline"}
                     </MenuItem>
                     <a href="#pos-overview" role="menuitem" className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm hover:bg-canvas">
                       <MonitorCog size={16} className="text-muted" />
