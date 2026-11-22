@@ -64,7 +64,8 @@ import {
   WifiOff,
   X,
 } from "lucide-react";
-import { Avatar, Toaster, cx } from "../ui/kit";
+import type { Staff } from "../data/types";
+import { Toaster, cx } from "../ui/kit";
 import Overview from "./Overview";
 import Transactions from "./Transactions";
 import Registers from "./Registers";
@@ -77,6 +78,7 @@ import AuditLog from "./AuditLog";
 import Promotions from "./Promotions";
 import GiftCards from "./GiftCards";
 import StockMoves from "./StockMoves";
+import { AdminUserChip } from "./AdminGate";
 
 /**
  * The existing ASL ORIGINALS admin menu, copied from the admin prototype (components/admin/nav-config.ts):
@@ -187,7 +189,17 @@ export const POS_PAGES: { id: string; label: string; icon: typeof Gauge; group: 
 
 export const go = (page: string) => (location.hash = `#pos-${page}`);
 
-export default function Admin({ section, page }: { section: string; page: string }) {
+export default function Admin({
+  section,
+  page,
+  staff,
+  onSignOut,
+}: {
+  section: string;
+  page: string;
+  staff: Staff;
+  onSignOut: () => void;
+}) {
   const [posOpen, setPosOpen] = useState(true);
   const [mobileNav, setMobileNav] = useState(false);
   const main = useRef<HTMLDivElement>(null);
@@ -287,11 +299,7 @@ export default function Admin({ section, page }: { section: string; page: string
               <Bell size={18} />
               <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-bad px-1 text-[10px] font-semibold text-white">3</span>
             </button>
-            <span className="hidden items-center gap-2 rounded-md border border-line px-2 py-1 text-[12px] sm:flex" title="Admin persona">
-              <span className="flex h-6 w-6 items-center justify-center rounded bg-gold/15 text-[10px] font-bold text-gold">SM</span>
-              Store Manager
-            </span>
-            <Avatar name="Temi Bakare" size={32} />
+            <AdminUserChip staff={staff} onSignOut={onSignOut} />
           </div>
         </header>
         <div className="flex min-h-0 flex-1">

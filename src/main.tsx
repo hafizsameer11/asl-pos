@@ -4,6 +4,7 @@ import { registerSW } from "virtual:pwa-register";
 import "@fontsource-variable/inter-tight";
 import "./index.css";
 import Admin from "./admin/Admin";
+import AdminGate from "./admin/AdminGate";
 import Till from "./till/Till";
 
 registerSW({ immediate: true });
@@ -21,8 +22,15 @@ function useHash() {
 function App() {
   const hash = useHash();
   // Plain hash names (#pos-receipts, #admin-orders, #till) so links survive being shared.
-  if (hash.startsWith("#pos")) return <Admin section="pos" page={hash.slice(5) || "overview"} />;
-  if (hash.startsWith("#admin-")) return <Admin section={hash.slice(7)} page="" />;
+  if (hash.startsWith("#pos") || hash.startsWith("#admin-")) {
+    const section = hash.startsWith("#pos") ? "pos" : hash.slice(7);
+    const page = hash.startsWith("#pos") ? hash.slice(5) || "overview" : "";
+    return (
+      <AdminGate>
+        {(staff, signOut) => <Admin section={section} page={page} staff={staff} onSignOut={signOut} />}
+      </AdminGate>
+    );
+  }
   return <Till />;
 }
 
